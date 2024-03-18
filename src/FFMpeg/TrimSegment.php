@@ -16,11 +16,6 @@ class TrimSegment
     ) {
     }
 
-    public function getInput(): string
-    {
-        return $this->input;
-    }
-
     public function buildPartOfCommand(): array
     {
         return ['-ss', (string) $this->start, '-t', (string) $this->duration, '-i', $this->input];
