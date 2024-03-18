@@ -3,6 +3,7 @@
 namespace Tests\FFMpeg\Functional;
 
 use FFMpeg\Coordinate\Dimension;
+use FFMpeg\Coordinate\TimeCode;
 use FFMpeg\Filters\AdvancedMedia\TestSrcFilter;
 use FFMpeg\Filters\AdvancedMedia\XStackFilter;
 use FFMpeg\Format\Audio\Mp3;
@@ -79,6 +80,35 @@ class AdvancedMediaTest extends FunctionalTestCase
             'QuickTime / MOV',
             $ffmpeg->open($output)->getFormat()->get('format_long_name')
         );
+        unlink($output);
+    }
+
+    public function testMultipleTrimSegmentsWithAbsenceOfInputs()
+    {
+        $ffmpeg = $this->getFFMpeg();
+        $input = realpath(__DIR__.'/../files/portrait.MOV');
+        $format = new X264('aac', 'libx264');
+        $output = __DIR__.'/'.self::OUTPUT_PATH_PREFIX.'multiple_trim_segments_test.mp4';
+
+        $advancedMedia = $ffmpeg->openAdvanced([]);
+        $advancedMedia
+            ->trim(TimeCode::fromSeconds(0.1), TimeCode::fromSeconds(0.5), $input)
+            ->trim(TimeCode::fromSeconds(1.3), TimeCode::fromSeconds(0.5), $input);
+        $advancedMedia
+            ->filters()
+            ->custom('[0:v][0:a][1:v][1:a]', 'concat=n=2:v=1:a=1', '[v][a]');
+        $advancedMedia
+            ->map(['[v]', '[a]'], $format, $output)
+            ->save();
+
+        $streams = $ffmpeg->getFFProbe()->streams($output);
+        $videoDuration = $streams->videos()->first()->get('duration');
+        $audioDuration = $streams->audios()->first()->get('duration');
+
+        $this->assertFileExists($output);
+        $this->assertTrue(0.9 <= $videoDuration && 1.1 >= $videoDuration);
+        $this->assertTrue(0.9 <= $audioDuration && 1.1 >= $audioDuration);
+
         unlink($output);
     }
 
