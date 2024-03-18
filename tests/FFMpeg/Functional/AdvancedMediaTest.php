@@ -101,10 +101,13 @@ class AdvancedMediaTest extends FunctionalTestCase
             ->map(['[v]', '[a]'], $format, $output)
             ->save();
 
+        $streams = $ffmpeg->getFFProbe()->streams($output);
+        $videoDuration = $streams->videos()->first()->get('duration');
+        $audioDuration = $streams->audios()->first()->get('duration');
+
         $this->assertFileExists($output);
-        $stream = $ffmpeg->getFFProbe()->streams($output)->videos()->first();
-        $duration = $stream->get('duration');
-        $this->assertTrue(0.9 <= $duration && 1.1 >= $duration);
+        $this->assertTrue(0.9 <= $videoDuration && 1.1 >= $videoDuration);
+        $this->assertTrue(0.9 <= $audioDuration && 1.1 >= $audioDuration);
 
         unlink($output);
     }
