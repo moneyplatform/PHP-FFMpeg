@@ -98,7 +98,7 @@ class AdvancedMediaTest extends FunctionalTestCase
             ->filters()
             ->custom('[0:v][0:a][1:v][1:a]', 'concat=n=2:v=1:a=1', '[v][a]');
         $advancedMedia
-            ->map(['[v]', '[v]'], $format, $output)
+            ->map(['[v]', '[a]'], $format, $output)
             ->save();
 
         $this->assertFileExists($output);
